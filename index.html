@@ -316,6 +316,8 @@
     filtered.forEach(d => {
       const link = d.link_ujian || '';
       const linkValid = /^https?:\/\//i.test(link);
+      // SESUDAH (terima http/https ATAU path relatif yang aman)
+      const linkValid = /^(https?:\/\/|\/|\.\/|[a-z0-9_\-]+\.html)/i.test(link);
       const linkAman = linkValid ? link : '#';
       const disabled = linkValid ? '' : 'disabled';
       const target = linkValid ? 'target="_blank" rel="noopener noreferrer"' : '';
