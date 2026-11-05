@@ -98,7 +98,6 @@
 
   // ---------- Utility ----------
 
-  // Escape HTML lengkap (termasuk kutip tunggal)
   function esc(str) {
     return String(str ?? '')
       .replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -106,7 +105,6 @@
       .replace(/'/g, '&#39;');
   }
 
-  // Ambil tanggal hari ini dalam format YYYY-MM-DD (zona waktu lokal)
   function tanggalHariIni() {
     const d = new Date();
     const yyyy = d.getFullYear();
@@ -115,7 +113,6 @@
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  // Format YYYY-MM-DD menjadi "5 November 2026" untuk tampilan
   function formatTanggalIndo(isoDate) {
     const bulan = ['Januari','Februari','Maret','April','Mei','Juni',
                    'Juli','Agustus','September','Oktober','November','Desember'];
@@ -124,9 +121,6 @@
     return `${d} ${bulan[m - 1]} ${y}`;
   }
 
-  // Normalisasi berbagai format tanggal menjadi YYYY-MM-DD.
-  // Mendukung: YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY, DD/MM/YY,
-  // dan format teks Indonesia "5 November 2026".
   function normalisasiTanggal(str) {
     if (!str) return '';
     str = String(str).trim();
@@ -156,13 +150,11 @@
       return `${m[3]}-${bulanMap[m[2]]}-${m[1].padStart(2, '0')}`;
     }
 
-    return str; // tidak dikenali
+    return str;
   }
 
   // ---------- CSV Parser ----------
 
-  // Parser CSV yang menangani kutip, escaped quote (""),
-  // dan line ending \r\n / \n / \r dengan benar.
   function parseCSV(text) {
     const rows = [];
     let row = [], field = '', inQuotes = false;
@@ -183,7 +175,6 @@
       if (c === '"') { inQuotes = true; i++; continue; }
       if (c === ',') { row.push(field); field = ''; i++; continue; }
       if (c === '\r') {
-        // \r\n atau \r saja
         if (text[i + 1] === '\n') i++;
         row.push(field); rows.push(row);
         row = []; field = ''; i++; continue;
@@ -195,7 +186,6 @@
       field += c; i++;
     }
 
-    // Sisa terakhir
     if (field.length || row.length) { row.push(field); rows.push(row); }
     return rows.filter(r => r.some(c => c.trim() !== ''));
   }
@@ -212,6 +202,26 @@
     } finally {
       clearTimeout(timer);
     }
+  }
+
+  // ---------- Validasi link ----------
+  // Terima:
+  //   - URL absolut: http://... atau https://...
+  //   - Path relatif: /path, ./path, ../path, ujian.html?...
+  // Tolak skema berbahaya: javascript:, data:, vbscript:
+  function isValidLink(link) {
+    if (!link) return false;
+    const s = String(link).trim();
+    if (!s) return false;
+    if (/^\s*(javascript|data|vbscript):/i.test(s)) return false;
+    if (/^https?:\/\//i.test(s)) return true;
+    if (/^(\/|\.\/|\.\.\/)/.test(s)) return true;
+    if (/^[a-z0-9_\-]+\.html(\?|#|$)/i.test(s)) return true;
+    return false;
+  }
+
+  function isAbsoluteLink(link) {
+    return /^https?:\/\//i.test(String(link || '').trim());
   }
 
   // ---------- Load & Render ----------
@@ -232,26 +242,21 @@
       const rows = parseCSV(text);
       if (rows.length < 2) throw new Error("Data kosong atau hanya berisi header.");
 
-      // Normalisasi header: lowercase, trim, ganti spasi dengan underscore
       const header = rows[0].map(h => h.trim().toLowerCase().replace(/\s+/g, '_'));
 
-      // Pastikan kolom wajib ada
       const wajib = ['kelas', 'mata_pelajaran', 'link_ujian'];
       const hilang = wajib.filter(k => !header.includes(k));
       if (hilang.length) {
         throw new Error("Kolom wajib tidak ditemukan: " + hilang.join(', '));
       }
 
-      // Mapping baris ke objek
       semuaData = rows.slice(1).map(r => {
         const obj = {};
         header.forEach((h, idx) => {
-          // Jika header duplikat, ambil nilai pertama yang non-kosong
           if (obj[h] === undefined || obj[h] === '') {
             obj[h] = (r[idx] || '').trim();
           }
         });
-        // Simpan tanggal ternormalisasi untuk filter
         obj._tanggalISO = normalisasiTanggal(obj.tanggal || '');
         return obj;
       });
@@ -278,7 +283,6 @@
     filterKelasEl.innerHTML = '<option value="">Semua Kelas</option>' +
       kelasSet.map(k => `<option value="${esc(k)}">${esc(k)}</option>`).join('');
 
-    // Pulihkan pilihan lama jika masih ada
     if (kelasSet.includes(nilaiLama)) {
       filterKelasEl.value = nilaiLama;
     }
@@ -289,7 +293,6 @@
     const fSearch = searchInputEl.value.toLowerCase().trim();
     const hariIni = tanggalHariIni();
 
-    // Filter: hanya ujian hari ini + kelas + pencarian
     const filtered = semuaData.filter(d => {
       if (d._tanggalISO !== hariIni) return false;
       const cocokKelas = !fKelas || (d.kelas || '').toLowerCase() === fKelas;
@@ -314,13 +317,14 @@
     emptyStateEl.classList.add('d-none');
 
     filtered.forEach(d => {
-      const link = d.link_ujian || '';
-      const linkValid = /^https?:\/\//i.test(link);
-      // SESUDAH (terima http/https ATAU path relatif yang aman)
-      const linkValid = /^(https?:\/\/|\/|\.\/|[a-z0-9_\-]+\.html)/i.test(link);
+      const link = (d.link_ujian || '').trim();
+      const linkValid = isValidLink(link);
       const linkAman = linkValid ? link : '#';
       const disabled = linkValid ? '' : 'disabled';
-      const target = linkValid ? 'target="_blank" rel="noopener noreferrer"' : '';
+      // Hanya link absolut yang dibuka di tab baru
+      const target = linkValid && isAbsoluteLink(link)
+        ? 'target="_blank" rel="noopener noreferrer"'
+        : '';
 
       const col = document.createElement('div');
       col.className = 'col-md-6 col-lg-4';
