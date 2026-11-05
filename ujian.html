@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ujian Online - SMK YPM 3 TAMAN</title>
+
+  <style>
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden; position: fixed;
+    }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0; padding: 0;
+      background-color: #1a1a2e;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    #start-container {
+      text-align: center;
+      width: 90%; max-width: 600px;
+      padding: 35px 20px;
+      background: #162447;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      margin: auto;
+    }
+    .school-logo {
+      width: 100px; height: auto;
+      margin-bottom: 15px;
+      filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.3));
+    }
+    .info-mapel {
+      background: rgba(228, 63, 90, 0.15);
+      border: 1px solid #e43f5a;
+      border-radius: 8px;
+      padding: 12px;
+      margin: 20px 0;
+    }
+    .info-mapel .label { font-size: 12px; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1px; }
+    .info-mapel .nilai { font-size: 20px; font-weight: bold; color: #ffeb3b; margin-top: 4px; }
+    .btn {
+      padding: 12px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #e43f5a;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 10px;
+    }
+    .btn:hover:not(:disabled) {
+      background-color: #ff4b6b;
+      transform: translateY(-2px);
+    }
+    .btn:disabled {
+      background-color: #555 !important;
+      color: #aaa !important;
+      cursor: not-allowed;
+    }
+    #exam-container {
+      display: none;
+      width: 100vw; height: 100vh;
+      background: white;
+      position: fixed; top: 0; left: 0;
+      z-index: 9999;
+    }
+    iframe { width: 100%; height: 100%; border: none; }
+    #warning-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(211, 47, 47, 0.98);
+      z-index: 99999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .error-box {
+      background: #162447;
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 500px;
+      text-align: center;
+    }
+    .error-box h2 { color: #ffeb3b; }
+    .error-box ul { text-align: left; color: #cbd5e1; font-size: 14px; line-height: 1.8; }
+  </style>
+</head>
+<body>
+
+  <audio id="alarm-sound" src="ujian.mp3" loop></audio>
+
+  <!-- Container error (jika parameter tidak valid) -->
+  <div id="error-container" style="display:none; width: 90%; max-width: 600px; margin: auto;">
+    <div class="error-box">
+      <h2>⚠️ Tidak Dapat Membuka Ujian</h2>
+      <p id="error-message" style="color:#cbd5e1; line-height:1.6;"></p>
+      <button class="btn" onclick="window.location.href='index.html'">Kembali ke Daftar Ujian</button>
+    </div>
+  </div>
+
+  <!-- Container mulai -->
+  <div id="start-container" style="display:none;">
+    <img src="logo1.jpg" alt="Logo SMK YPM 3 TAMAN" class="school-logo"
+         onerror="this.style.display='none'">
+
+    <h2>Sistem Ujian Online<br>SMK YPM 3 TAMAN</h2>
+
+    <div class="info-mapel">
+      <div class="label">Mata Pelajaran</div>
+      <div class="nilai" id="info-nama-mapel">-</div>
+      <div class="label" style="margin-top:10px;">Kelas</div>
+      <div class="nilai" id="info-kelas">-</div>
+    </div>
+
+    <p style="color: #cbd5e1; line-height: 1.6; font-size: 14px;">
+      Ujian ini dilengkapi dengan sistem proteksi ketat.<br>
+      Anda wajib berada pada mode <strong>Fullscreen</strong>, dilarang berpindah aplikasi/tab,
+      atau melakukan screenshot selama ujian berlangsung.
+    </p>
+
+    <button class="btn" id="btn-mulai" onclick="mulaiUjian()">
+      🚀 Mulai Ujian Sekarang
+    </button>
+  </div>
+
+  <!-- Container ujian -->
+  <div id="exam-container">
+    <iframe id="exam-iframe" src=""></iframe>
+  </div>
+
+  <!-- Overlay pelanggaran -->
+  <div id="warning-overlay">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+      <h1 style="font-size: 36px; margin-bottom: 10px;">⚠️ PELANGGARAN TERDETEKSI! ⚠️</h1>
+      <p style="font-size: 20px; max-width: 650px; margin: 20px; line-height: 1.6;">
+        Sistem mendeteksi tindakan mencurigakan (mencoba keluar fullscreen,
+        menekan tombol navigasi, berpindah tab, atau membuka aplikasi lain).
+      </p>
+      <h2 id="cheat-alert" style="color: #ffeb3b; background: rgba(0,0,0,0.2); padding: 10px 20px; border-radius: 5px;">
+        Jumlah Pelanggaran: 0 / 2
+      </h2>
+      <button id="btn-kembali" class="btn" style="background: white; color: #d32f2f;"
+              onclick="kembaliKeUjian()">Saya Mengerti, Kembali ke Ujian</button>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // KONFIGURASI MATA UJIAN
+    // ------------------------------------------------------------
+    // Setiap mapel WAJIB punya properti:
+    //   - nama   : nama tampilan mapel
+    //   - form   : URL Google Form
+    //   - kelas  : array kelas yang diizinkan
+    //              Gunakan ["*"] jika boleh diakses semua kelas.
+    //
+    // Kelas dicocokkan case-insensitive dan toleran spasi.
+    // Contoh: "XI DKV 1" == "xi dkv 1" == "XI-DKV-1"
+    // ============================================================
+    const MAPEL_CONFIG = {
+      "bk": {
+        nama: "Bimbingan Konseling",
+        form: "https://forms.gle/iiMY3Mjq8yMK4zcq8",
+        kelas: ["XI DKV 1", "XI MPLB 1", "XI AKL 1"]
+      },
+      "mtk": {
+        nama: "Matematika",
+        form: "https://forms.gle/abc123contoh",
+        kelas: ["XI DKV 1", "XI DKV 2"]
+      },
+      "bindo": {
+        nama: "Bahasa Indonesia",
+        form: "https://forms.gle/def456contoh",
+        kelas: ["*"] // boleh semua kelas
+      },
+      "akuntansi": {
+        nama: "Akuntansi Dasar",
+        form: "https://forms.gle/ghi789contoh",
+        kelas: ["XI AKL 1", "XI AKL 2"]
+      },
+      "dkv": {
+        nama: "Desain Komunikasi Visual",
+        form: "https://forms.gle/jkl012contoh",
+        kelas: ["XI DKV 1", "XI DKV 2"]
+      }
+    };
+
+    // ============================================================
+    // KONFIGURASI KEAMANAN
+    // ============================================================
+    const maxCheats = 2;
+    const PIN_PANITIA = "gavanzeztz"; // GANTI dengan PIN rahasia Anda
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    let isExamRunning = false;
+    let cheatCount = parseInt(localStorage.getItem('exam_cheat_count')) || 0;
+    let konfigurasiAktif = null;
+    let kelasAktif = "";
+
+    const alarmSound = document.getElementById('alarm-sound');
+    const startContainer = document.getElementById('start-container');
+    const errorContainer = document.getElementById('error-container');
+    const errorMessage = document.getElementById('error-message');
+    const examContainer = document.getElementById('exam-container');
+    const examIframe = document.getElementById('exam-iframe');
+    const warningOverlay = document.getElementById('warning-overlay');
+
+    // ============================================================
+    // UTIL: normalisasi nama kelas untuk perbandingan
+    // "XI DKV 1", "xi-dkv-1", " XI  DKV  1 " -> "xidkv1"
+    // ============================================================
+    function normalisasiKelas(str) {
+      return String(str || '')
+        .toLowerCase()
+        .replace(/[\s\-_]+/g, '')  // hapus spasi, strip, underscore
+        .trim();
+    }
+
+    // Cek apakah kelas ada di daftar kelas mapel
+    function kelasDiizinkan(kelas, daftarKelas) {
+      if (!Array.isArray(daftarKelas) || daftarKelas.length === 0) return false;
+      if (daftarKelas.includes("*")) return true;
+      const target = normalisasiKelas(kelas);
+      return daftarKelas.some(k => normalisasiKelas(k) === target);
+    }
+
+    // ============================================================
+    // PROTEKSI ANTI INSPECT DASAR
+    // ============================================================
+    (function() {
+      document.addEventListener('contextmenu', (e) => e.preventDefault());
+    })();
+
+    // ============================================================
+    // CEK BROWSER
+    // ============================================================
+    function cekBrowserChrome() {
+      const ua = navigator.userAgent.toLowerCase();
+      const vendor = navigator.vendor ? navigator.vendor.toLowerCase() : '';
+      const isIOS = /iphone|ipad|ipod/.test(ua);
+      if (isIOS) return ua.includes("crios");
+
+      const hasChromeString = ua.includes("chrome") || ua.includes("chromium");
+      const isGoogleVendor = vendor.includes("google");
+      const isBlacklisted =
+        ua.includes("edg") || ua.includes("opr") || ua.includes("brave") ||
+        ua.includes("samsungbrowser") || ua.includes("miuibrowser") ||
+        ua.includes("huaweibrowser") || ua.includes("oppobrowser") ||
+        ua.includes("vivobrowser") || ua.includes("ucbrowser") ||
+        ua.includes("fbav") || ua.includes("instagram");
+
+      return hasChromeString && isGoogleVendor && !isBlacklisted;
+    }
+
+    function tampilkanError(msg) {
+      startContainer.style.display = 'none';
+      errorContainer.style.display = 'block';
+      errorMessage.innerHTML = msg;
+    }
+
+    // ============================================================
+    // BACA & VALIDASI PARAMETER URL
+    // ============================================================
+    function bacaParameterURL() {
+      const params = new URLSearchParams(window.location.search);
+      const mapelKey = (params.get('mapel') || '').trim().toLowerCase();
+      const kelas = (params.get('kelas') || '').trim();
+
+      // --- Validasi: mapel wajib ada ---
+      if (!mapelKey) {
+        tampilkanError(
+          "Parameter <code>mapel</code> tidak ditemukan di URL.<br><br>" +
+          "Contoh pemakaian:<br>" +
+          "<code>ujian.html?mapel=bk&kelas=XI DKV 1</code>"
+        );
+        return false;
+      }
+
+      // --- Validasi: mapel harus dikenali ---
+      const config = MAPEL_CONFIG[mapelKey];
+      if (!config) {
+        tampilkanError(
+          "Mata pelajaran <strong>'" + escapeHtml(mapelKey) + "'</strong> tidak dikenali.<br><br>" +
+          "Mapel yang tersedia:<br>" +
+          Object.keys(MAPEL_CONFIG).map(k =>
+            "<code>" + k + "</code> (" + escapeHtml(MAPEL_CONFIG[k].nama) + ")"
+          ).join("<br>")
+        );
+        return false;
+      }
+
+      // --- Validasi: URL form valid ---
+      if (!config.form || !/^https?:\/\//i.test(config.form)) {
+        tampilkanError("URL Google Form untuk mapel <strong>" +
+          escapeHtml(config.nama) + "</strong> belum diset dengan benar.");
+        return false;
+      }
+
+      // --- Validasi: kelas wajib ada ---
+      if (!kelas) {
+        tampilkanError(
+          "Parameter <code>kelas</code> tidak ditemukan di URL.<br><br>" +
+          "Contoh pemakaian:<br>" +
+          "<code>ujian.html?mapel=" + escapeHtml(mapelKey) + "&kelas=XI DKV 1</code><br><br>" +
+          "<em>Hubungi pengawas jika Anda tidak tahu kelas Anda.</em>"
+        );
+        return false;
+      }
+
+      // --- Validasi: kelas diizinkan untuk mapel ini ---
+      if (!kelasDiizinkan(kelas, config.kelas)) {
+        const daftar = (config.kelas || []).includes("*")
+          ? "semua kelas"
+          : (config.kelas || []).map(k => "<code>" + escapeHtml(k) + "</code>").join(", ");
+
+        tampilkanError(
+          "Kelas <strong>" + escapeHtml(kelas) + "</strong> " +
+          "tidak terdaftar untuk mata pelajaran <strong>" +
+          escapeHtml(config.nama) + "</strong>.<br><br>" +
+          "Kelas yang diizinkan: " + daftar + "<br><br>" +
+          "<em>Periksa kembali URL atau hubungi pengawas.</em>"
+        );
+        return false;
+      }
+
+      // --- Lolos semua validasi ---
+      konfigurasiAktif = config;
+      kelasAktif = kelas;
+
+      document.getElementById('info-nama-mapel').textContent = config.nama;
+      document.getElementById('info-kelas').textContent = kelas;
+      document.title = config.nama + " (" + kelas + ") - Ujian Online SMK YPM 3 TAMAN";
+
+      return true;
+    }
+
+    // Helper escape HTML untuk pesan error (mencegah XSS via URL)
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // ============================================================
+    // MULAI UJIAN
+    // ============================================================
+    function mulaiUjian() {
+      if (!konfigurasiAktif) return;
+      if (!cekBrowserChrome()) return tampilkanBrowserDiblokir();
+      if (cheatCount >= maxCheats) return kunciAksesTotal();
+
+      alarmSound.play().then(() => {
+        alarmSound.pause();
+        alarmSound.currentTime = 0;
+      }).catch(() => {});
+
+      isExamRunning = true;
+      examIframe.src = konfigurasiAktif.form;
+
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
+      else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+
+      startContainer.style.display = 'none';
+      examContainer.style.display = 'block';
+
+      aktifkanFiturKeamanan();
+      inisialisasiAntiBack();
+    }
+
+    // ============================================================
+    // FITUR KEAMANAN
+    // ============================================================
+    function aktifkanFiturKeamanan() {
+      document.addEventListener('fullscreenchange', checkFullscreen);
+      document.addEventListener('webkitfullscreenchange', checkFullscreen);
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden && isExamRunning) catatPelanggaran();
+      });
+
+      document.addEventListener('touchmove', function(e) {
+        if (isExamRunning && e.scale !== 1) e.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === "F12") { e.preventDefault(); return false; }
+        if (e.ctrlKey && e.shiftKey &&
+            ['I','C','J','i','c','j'].includes(e.key)) {
+          e.preventDefault(); return false;
+        }
+        if (e.ctrlKey && ['s','S','p','P','u','U'].includes(e.key)) {
+          e.preventDefault(); return false;
+        }
+        if (e.key === "PrintScreen" || e.keyCode === 44) {
+          e.preventDefault();
+          catatPelanggaran();
+          alert("Dilarang keras mengambil Screenshot!");
+          return false;
+        }
+      });
+    }
+
+    function checkFullscreen() {
+      if (!isExamRunning) return;
+      const isFull = document.fullscreenElement || document.webkitFullscreenElement;
+      if (!isFull) catatPelanggaran();
+    }
+
+    function inisialisasiAntiBack() {
+      window.history.pushState(null, null, window.location.href);
+      window.onpopstate = function() {
+        window.history.pushState(null, null, window.location.href);
+        if (isExamRunning) {
+          catatPelanggaran();
+          alert("Akses diblokir! Dilarang menekan tombol kembali (Back).");
+        }
+      };
+    }
+
+    window.onbeforeunload = function() {
+      if (isExamRunning) return "Apakah Anda yakin ingin keluar?";
+    };
+
+    // ============================================================
+    // PELANGGARAN
+    // ============================================================
+    function catatPelanggaran() {
+      if (!isExamRunning) return;
+      cheatCount++;
+      localStorage.setItem('exam_cheat_count', cheatCount);
+
+      alarmSound.volume = 1.0;
+      alarmSound.play().catch(err => console.log("Audio error:", err));
+
+      if (cheatCount >= maxCheats) {
+        kunciAksesTotal();
+      } else {
+        document.getElementById('cheat-alert').innerText =
+          "Jumlah Pelanggaran: " + cheatCount + " / " + maxCheats;
+        warningOverlay.style.display = 'flex';
+
+        const btnKembali = document.getElementById('btn-kembali');
+        btnKembali.disabled = true;
+        let sisaWaktu = 60;
+        btnKembali.innerText = `Tunggu (${sisaWaktu}s) untuk kembali`;
+
+        const countdown = setInterval(() => {
+          sisaWaktu--;
+          if (sisaWaktu <= 0) {
+            clearInterval(countdown);
+            btnKembali.disabled = false;
+            btnKembali.innerText = "Saya Mengerti, Kembali ke Ujian";
+          } else {
+            btnKembali.innerText = `Tunggu (${sisaWaktu}s) untuk kembali`;
+          }
+        }, 1000);
+      }
+    }
+
+    // ============================================================
+    // KUNCI TOTAL & RESET PIN
+    // ============================================================
+    function kunciAksesTotal() {
+      isExamRunning = false;
+      examContainer.style.display = 'none';
+      examIframe.src = '';
+      startContainer.style.display = 'none';
+
+      warningOverlay.style.display = 'flex';
+      warningOverlay.innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
+          <h1 style="font-size: 38px; color: #ffeb3b; margin-bottom: 10px;">❌ AKSES DIKUNCI TOTAL ❌</h1>
+          <p style="font-size: 20px; max-width: 600px; margin: 20px; line-height: 1.6;">
+            Anda telah melebihi batas toleransi kecurangan (${maxCheats} kali).
+          </p>
+          <button class="btn" style="background: #2196F3; color: white; margin-top: 30px;"
+                  onclick="resetPelanggaranPanitia()">
+            ⚙️ Reset Pelanggaran (TIM IT)
+          </button>
+        </div>
+      `;
+    }
+
+    function resetPelanggaranPanitia() {
+      const inputPin = prompt("Masukkan PIN Rahasia Panitia:");
+      if (inputPin === null) return;
+
+      if (inputPin === PIN_PANITIA) {
+        alarmSound.pause();
+        alarmSound.currentTime = 0;
+        localStorage.removeItem('exam_cheat_count');
+        alert("Berhasil di-reset! Halaman akan dimuat ulang.");
+        window.location.reload();
+      } else {
+        alert("PIN Salah!");
+      }
+    }
+
+    function kembaliKeUjian() {
+      if (cheatCount >= maxCheats) return kunciAksesTotal();
+
+      alarmSound.pause();
+      alarmSound.currentTime = 0;
+
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
+      else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+
+      warningOverlay.style.display = 'none';
+    }
+
+    // ============================================================
+    // BROWSER DIBLOKIR
+    // ============================================================
+    function tampilkanBrowserDiblokir() {
+      isExamRunning = false;
+      startContainer.style.display = 'none';
+      examContainer.style.display = 'none';
+
+      warningOverlay.style.display = 'flex';
+      warningOverlay.innerHTML = `
+        <h1 style="font-size: 32px; color: #ffeb3b;">⚠️ BROWSER DIBLOKIR ⚠️</h1>
+        <p style="font-size: 18px; max-width: 600px; margin: 20px; line-height: 1.6;">
+          Portal ujian ini <strong>HANYA BISA DIAKSES</strong> menggunakan browser resmi
+          <strong>Google Chrome</strong>.
+        </p>
+      `;
+    }
+
+    // ============================================================
+    // INISIALISASI
+    // ============================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      window.scrollTo(0, 0);
+
+      if (!cekBrowserChrome()) {
+        tampilkanBrowserDiblokir();
+        return;
+      }
+
+      if (!bacaParameterURL()) return;
+
+      if (cheatCount >= maxCheats) {
+        kunciAksesTotal();
+        return;
+      }
+
+      startContainer.style.display = 'block';
+    });
+  </script>
+</body>
+</html>
