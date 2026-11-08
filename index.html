@@ -26,7 +26,21 @@
     .btn-mulai:hover { background: #ff4b6b; color: #fff; }
     .btn-mulai:disabled { background: #555; color: #aaa; }
     .filter-bar { background: #162447; border-radius: 12px; padding: 16px; }
-    .school-logo { width: 80px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); }
+    .header-banner {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+      background: #fff;
+    }
+    .portal-heading { color: #fff; letter-spacing: .3px; }
+    .portal-subheading { color: #cbd5e1; }
+    @media (max-width: 576px) {
+      .container { padding-left: 12px; padding-right: 12px; }
+      .header-banner { border-radius: 9px; }
+      .portal-heading { font-size: 1.35rem; }
+    }
     .empty-state {
       background: #162447; border-radius: 12px; padding: 40px;
       text-align: center; color: #cbd5e1;
@@ -38,13 +52,17 @@
 
 <div class="container py-4">
 
-  <div class="text-center mb-4">
-    <img src="logo1.jpg" alt="Logo" class="school-logo mb-2"
-         onerror="this.style.display='none'">
-    <h2 class="fw-bold mb-1">Portal Ujian Online</h2>
-    <p class="text-secondary mb-0">SMK ITABA</p>
-    <p class="tanggal-info small mb-0 mt-1" id="infoTanggal"></p>
-  </div>
+  <header class="text-center mb-4">
+    <img
+      src="header.png"
+      alt="Penilaian Sumatif Akhir Semester SMK ITABA Tahun Pelajaran 2025/2026"
+      class="header-banner mb-3"
+      fetchpriority="high"
+    >
+    <h1 class="portal-heading fw-bold h3 mb-1">Portal Ujian Online</h1>
+    <p class="portal-subheading mb-1">Pilih ujian sesuai kelas dan mata pelajaran</p>
+    <p class="tanggal-info small mb-0 mt-2" id="infoTanggal"></p>
+  </header>
 
   <div class="filter-bar mb-4">
     <div class="row g-3 align-items-end">
