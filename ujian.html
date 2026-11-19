@@ -169,29 +169,106 @@
     // Kelas dicocokkan case-insensitive dan toleran spasi.
     // Contoh: "XI DKV 1" == "xi dkv 1" == "XI-DKV-1"
     // ============================================================
-    const MAPEL_CONFIG = {
-      "bing": {
-        nama: "B. Inggris",
-        form: "https://forms.gle/NRkMo4RUuR9783Cm8",
-        kelas: ["X DKV 1"]
-      },
-      "mtk": {
-        nama: "Matematika",
-        form: "https://forms.gle/abc123contoh",
-        kelas: ["X DKV 2"]
-      },
-      "bin": {
-        nama: "Bahasa Indonesia",
-        form: "https://forms.gle/Mfe6Va9n8dRVxc35A",
-        kelas: ["XI DKV 2"] // boleh semua kelas
-      },
-      "PJOK": {
-        nama: "Akuntansi Dasar",
-        form: "https://forms.gle/ghi789contoh",
-        kelas: ["XI DKV 1"]
-      }
-      
-    };
+   const MAPEL_CONFIG = {
+  "pjok_x": {
+    nama: "PJOK X",
+    form: "",
+    guru: "MUIS LIDINILLAH, S.Pd",
+    kelas: ["X DKV 1", "X DKV 2", "X TKR 1", "X TKR 2"],
+    tanggal: "2026-11-19"
+  },
+  "pjok_xi": {
+    nama: "PJOK XI",
+    form: "",
+    guru: "MUIS LIDINILLAH, S.Pd",
+    kelas: ["XI DKV 1", "XI TKR 1"],
+    tanggal: "2026-11-19"
+  },
+  "dkm": {
+    nama: "D. Kemasan",
+    form: "",
+    guru: "ARIFIN, S.Ds",
+    kelas: ["XII DKV 1", "XII DKV 2"],
+    tanggal: "2026-11-19"
+  },
+  "pmkr": {
+    nama: "PMKR",
+    form: "",
+    guru: "MOCH. AMIRULLOH UMAM, S.T",
+    kelas: ["XII TKR 1", "XII TKR 2"],
+    tanggal: "2026-11-19"
+  },
+  "aswaja_xdkv1": {
+    nama: "Aswaja X DKV 1",
+    form: "",
+    guru: "UUS FIRDAUS, S.H",
+    kelas: ["X DKV 1"],
+    tanggal: "2026-11-19"
+  },
+  "aswaja_xdkv2": {
+    nama: "Aswaja X DKV 2",
+    form: "",
+    guru: "UUS FIRDAUS, S.H",
+    kelas: ["X DKV 2"],
+    tanggal: "2026-11-19"
+  },
+  "aswaja_xtkr1": {
+    nama: "Aswaja X TKR 1",
+    form: "",
+    guru: "MUNA LAILATUL M, S.Pd",
+    kelas: ["X TKR 1"],
+    tanggal: "2026-11-19"
+  },
+  "aswaja_xtkr2": {
+    nama: "Aswaja X TKR 2",
+    form: "",
+    guru: "MUNA LAILATUL M, S.Pd",
+    kelas: ["X TKR 2"],
+    tanggal: "2026-11-19"
+  },
+  "aswaja_xidkv1": {
+    nama: "Aswaja XI DKV 1",
+    form: "",
+    guru: "GETA SYAHWARA, S.Pd",
+    kelas: ["XI DKV 1"],
+    tanggal: "2026-11-19"
+  },
+  "aswaja_xitkr1": {
+    nama: "Aswaja XI TKR 1",
+    form: "",
+    guru: "GETA SYAHWARA, S.Pd",
+    kelas: ["XI TKR 1"],
+    tanggal: "2026-11-19"
+  },
+  "aswaja_xiidkv1": {
+    nama: "Aswaja XII DKV 1",
+    form: "",
+    guru: "UUS FIRDAUS, S.H",
+    kelas: ["XII DKV 1"],
+    tanggal: "2026-11-19"
+  },
+  "aswaja_xiidkv2": {
+    nama: "Aswaja XII DKV 2",
+    form: "",
+    guru: "UUS FIRDAUS, S.H",
+    kelas: ["XII DKV 2"],
+    tanggal: "2026-11-19"
+  },
+  "aswaja_xiitkr1": {
+    nama: "Aswaja XII TKR 1",
+    form: "",
+    guru: "UUS FIRDAUS, S.H",
+    kelas: ["XII TKR 1"],
+    tanggal: "2026-11-19"
+  },
+  "aswaja_xiitkr2": {
+    nama: "Aswaja XII TKR 2",
+    form: "",
+    guru: "UUS FIRDAUS, S.H",
+    kelas: ["XII TKR 2"],
+    tanggal: "2026-11-19"
+  }
+};
 
     // ============================================================
     // KONFIGURASI KEAMANAN
